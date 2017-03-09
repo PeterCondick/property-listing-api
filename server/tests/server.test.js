@@ -215,7 +215,7 @@ describe('POST /properties/zoopla/import', () => {
       .post('/properties/zoopla/import')
       .expect(200)
       .expect((res) => {
-        expect(res.body.data).toBe('updated everything from zoopla ok');
+        expect(res.body.data).toBe('updated everything from zoopla ok using promises');
       })
       .end((err, res) => {
         if (err) {

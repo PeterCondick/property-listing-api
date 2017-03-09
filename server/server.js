@@ -49,8 +49,7 @@ app.get('/properties/:id', (req, res) => {
 app.post('/properties', (req, res) => {
   //console.log(req.body);
 
-  var body = _.pick(req.body, ['listing_id',
-                              'property_report_url',
+  var body = _.pick(req.body, ['property_report_url',
                               'description',
                               'first_published_date',
                               'num_floors',
@@ -161,11 +160,12 @@ app.delete('/properties/:id', (req, res) => {
 
 app.post('/properties/zoopla/import', (req, res) => {
 
-  console.log(PropertyListingServices);
+  //console.log(PropertyListingServices);
+  console.log('in server post zoopla route');
 
-  PropertyListingServices.importZooplaData().then(() => {
+  PropertyListingServices.importZooplaData().then((result) => {
     res.send({
-      data: 'updated everything from zoopla ok using promises'
+      data: `updated everything from zoopla ok deleted ${result.numDeleted} and saved ${result.numSaved}`
     });
   }).catch((e) => {
     console.log('in catch ', e);
