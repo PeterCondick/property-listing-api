@@ -6,9 +6,14 @@ const _ = require('lodash');
 const {ObjectID} = require('mongodb');
 
 var {Property} = require('property-listing-models');
+var {mongSetup} = require('property-listing-models');
 const PropertyListingServices = require('property-listing-services');
 
 var app = express();
+
+console.log('in server mongSetup', mongSetup);
+mongSetup.connectToDb();
+console.log('connected ok');
 
 app.use(bodyParser.json());
 
@@ -16,13 +21,60 @@ const port = 3000;
 
 app.get('/properties', (req, res) => {
 
-  Property.find().then((properties) => {
-    res.send({
-      properties
+  let pageSizeStr = req.query.num;
+  let startAtStr = req.query.first;
+
+  let pageSize;
+  let startAt;
+  let paging = true;
+
+  if (pageSizeStr && !isNaN(pageSizeStr)) {
+    // convert to number
+    pageSize = +pageSizeStr;
+    //console.log('converted pageSize to ' + pageSize);
+  } else {
+    paging = false;
+  }
+  if (startAtStr && !isNaN(startAtStr)) {
+    // convert to number
+    startAt = +startAtStr;
+    //console.log('converted startAt to ' + startAt);
+  } else {
+    paging = false;
+  }
+  // console.log(`pageSize ${pageSize} startAt ${startAt}`);
+  // if (typeof pageSize === 'number') {
+  //   console.log('pageSize is a number', pageSize);
+  // } else {
+  //   console.log('its not a number', pageSize);
+  // }
+
+  console.log(`paging ${paging}`);
+
+  if (paging) {
+    Property
+          .find()
+          .limit(pageSize)
+          .skip(startAt)
+          .sort({
+            _id: 'asc'
+          })
+          .then((properties) => {
+      res.send({
+        properties
+      });
+    }, (e) => {
+      res.status(400).send(e);
     });
-  }, (e) => {
-    res.status(400).send(e);
-  });
+  } else {
+    Property.find().then((properties) => {
+      res.send({
+        properties
+      });
+    }, (e) => {
+      res.status(400).send(e);
+    });
+  }
 });
 
 app.get('/properties/:id', (req, res) => {
@@ -164,6 +216,7 @@ app.post('/properties/zoopla/import', (req, res) => {
   console.log('in server post zoopla route');
 
   PropertyListingServices.importZooplaData().then((result) => {
+
     res.send({
       data: `updated everything from zoopla ok deleted ${result.numDeleted} and saved ${result.numSaved}`
     });
